@@ -2,7 +2,6 @@
 
 namespace Clue\React\Soap\Protocol;
 
-use Clue\React\Buzz\Browser;
 use \SoapClient;
 use Clue\React\Buzz\Message\Request;
 use Clue\React\Buzz\Message\Headers;
@@ -24,14 +23,18 @@ class ClientEncoder extends SoapClient
 
     public function __doRequest($request, $location, $action, $version, $one_way = 0)
     {
+        $headers = array(
+            'SOAPAction' => (string)$action,
+            'Content-Type' => 'text/xml; charset=utf-8',
+            'Content-Length' => strlen($request)
+        );
+        if (isset($this->_login)) {
+            $headers['Authorization'] = 'Basic ' . base64_encode($this->_login . ':' . $this->_password);
+        }
         $this->request = new Request(
             'POST',
             (string)$location,
-            new Headers(array(
-                'SOAPAction' => (string)$action,
-                'Content-Type' => 'text/xml; charset=utf-8',
-                'Content-Length' => strlen($request)
-            )),
+            new Headers($headers),
             new Body((string)$request)
         );
 

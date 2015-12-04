@@ -4,7 +4,6 @@ namespace Clue\React\Soap;
 
 use Clue\React\Buzz\Browser;
 use Exception;
-use SoapClient;
 use Clue\React\Soap\Protocol\ClientEncoder;
 use Clue\React\Soap\Protocol\ClientDecoder;
 use Clue\React\Buzz\Message\Response;
@@ -17,14 +16,14 @@ class Client
     private $encoder;
     private $decoder;
 
-    public function __construct($wsdl, Browser $browser, ClientEncoder $encoder = null, ClientDecoder $decoder = null)
+    public function __construct($wsdl, Browser $browser, $options = null, ClientEncoder $encoder = null, ClientDecoder $decoder = null)
     {
         if ($encoder === null) {
-            $encoder = new ClientEncoder($wsdl);
+            $encoder = new ClientEncoder($wsdl, $options);
         }
 
         if ($decoder === null) {
-            $decoder = new ClientDecoder($wsdl);
+            $decoder = new ClientDecoder($wsdl, $options);
         }
 
         $this->wsdl = $wsdl;
@@ -44,14 +43,16 @@ class Client
         }
 
         return $this->browser->send($request)->then(
-            array($this, 'handleResponse'),
+            function(Response $response) use($name) { // Use closure to forward method name to response handler
+                return $this->handleResponse($response, $name);
+            },
             array($this, 'handleError')
         );
     }
 
-    public function handleResponse(Response $response)
+    public function handleResponse(Response $response, $name)
     {
-        return $this->decoder->decode((string)$response->getBody());
+        return $this->decoder->decode((string)$response->getBody(), $name);
     }
 
     public function handleError(Exception $error)
