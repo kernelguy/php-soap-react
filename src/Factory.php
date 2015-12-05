@@ -26,11 +26,11 @@ class Factory
         $this->browser = $browser;
     }
 
-    public function createClient($wsdl, $clientClass='\Clue\React\Soap\Client', $options=null)
+    public function createClient($wsdl, $clientClass='\Clue\React\Soap\Client', $options=array())
     {
         $browser = $this->browser;
 
-        return $this->browser->get($wsdl)->then(function (Response $response) use ($browser, $clientClass) {
+        return $this->browser->get($wsdl)->then(function (Response $response) use ($browser, $clientClass, $options) {
             $url = 'data://text/plain;base64,' . base64_encode((string)$response->getBody());
 
             return new $clientClass($url, $browser, $options);
